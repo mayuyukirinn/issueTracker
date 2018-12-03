@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.edu.fudan.issueservice.mapper.LocationMapper">
+
+    <resultMap id="location" type="Location">
+        <id property="uuid" column="uuid"/>
+        <result property="start_line" column="start_line"/>
+        <result property="end_line" column="end_line"/>
+        <result property="bug_lines" column="bug_lines"/>
+        <result property="start_token" column="start_token"/>
+        <result property="end_token" column="end_token"/>
+        <result property="file_path" column="file_path"/>
+        <result property="class_name" column="class_name"/>
+        <result property="method_name" column="method_name"/>
+        <result property="rawIssue_id" column="rawIssue_id"/>
+        <result property="code" column="code"/>
+    </resultMap>
+
+
+    <insert id="insertLocationList" parameterType="List">
+        insert into location
+        (
+        uuid,
+        start_line,
+        end_line,
+        bug_lines,
+        start_token,
+        end_token,
+        file_path,
+        class_name,
+        method_name,
+        rawIssue_id,
+        code
+        )
+        VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            #{item.uuid},
+            #{item.start_line},
+            #{item.end_line},
+            #{item.bug_lines},
+            #{item.start_token},
+            #{item.end_token},
+            #{item.file_path},
+            #{item.class_name},
+            #{item.method_name},
+            #{item.rawIssue_id},
+            #{item.code}
+            )
+        </foreach>
+    </insert>
+
+    <delete id="deleteLocationByRepoIdAndCategory" parameterType="String">
+        delete from location where rawIssue_id in (select uuid from rawIssue where scan_id in (select uuid from scan
+        where repo_id=#{repo_id} and category = #{category}))
+    </delete>
+
+    <select id="getLocations" parameterType="Location" resultMap="location">
+        select * from location where rawIssue_id =#{uuid}
+    </select>
+
+</mapper>

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.edu.fudan.scanservice.mapper.ScanMapper">
+
+
+    <resultMap id="scan" type="Scan">
+        <id property="uuid" column="uuid"/>
+        <result property="category" column="category"/>
+        <result property="name" column="name"/>
+        <result property="start_time" column="start_time"/>
+        <result property="end_time" column="end_time"/>
+        <result property="status" column="status"/>
+        <result property="result_summary" column="result_summary"/>
+        <result property="repo_id" column="repo_id"/>
+        <result property="commit_id" column="commit_id"/>
+        <result property="commit_time" column="commit_time"/>
+    </resultMap>
+
+    <!-- never used -->
+    <insert id="insertOneScan" parameterType="Scan">
+        insert into scan
+        (
+        uuid,
+        category,
+        name,
+        start_time,
+        end_time,
+        status,
+        result_summary,
+        repo_id,
+        commit_id,
+        commit_time
+        )
+        VALUES
+        (
+        #{uuid},
+        #{category},
+        #{name},
+        #{start_time},
+        #{end_time},
+        #{status},
+        #{result_summary},
+        #{repo_id},
+        #{commit_id},
+        #{commit_time}
+        )
+    </insert>
+
+
+    <delete id="deleteScanByRepoIdAndCategory" parameterType="String">
+        delete from scan where repo_id=#{repo_id} and category = #{category}
+    </delete>
+
+    <update id="updateOneScan" parameterType="Scan">
+        UPDATE scan
+        <set>
+            <if test="end_time != null">end_time = #{end_time},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="result_summary != null">result_summary = #{result_summary},</if>
+        </set>
+        where uuid = #{uuid}
+    </update>
+
+    <select id="getLatestScannedCommitId" parameterType="String" resultType="String">
+        select commit_id from scan where repo_id = #{repo_id} and category = #{category} and end_time = (select max(end_time) from scan where
+        repo_id = #{repo_id} and category = #{category});
+    </select>
+
+    <select id="getScanCountByCommitId" parameterType="String" resultType="Integer">
+        select count(uuid) from scan where commit_id = #{commit_id}
+    </select>
+
+    <select id="getScannedCommits" parameterType="String" resultMap="scan">
+        select * from scan where repo_id=#{repo_id} and category = #{category} order by commit_time
+    </select>
+</mapper>

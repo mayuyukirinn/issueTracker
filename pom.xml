@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>cn.edu.fudan</groupId>
+    <artifactId>issueTracker</artifactId>
+    <packaging>pom</packaging><!--父模块打包类型必须为pom-->
+    <version>1.0-SNAPSHOT</version>
+
+    <name>issueTracker</name>
+    <description>IssueTracker Parent</description>
+
+    <modules>
+        <module>account-service</module>
+        <module>clone-service</module>
+        <module>project-manager</module>
+        <module>scan-service</module>
+        <module>issue-service</module>
+        <module>tag-service</module>
+        <module>event-service</module>
+    </modules>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.0.3.RELEASE</version>
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <java.version>1.8</java.version>
+        <druidVersion>1.1.9</druidVersion>
+        <fastjsonVersion>1.2.47</fastjsonVersion>
+        <JDTVersion>3.12.3</JDTVersion>
+        <httpClientVersion>4.5.2</httpClientVersion>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!--druid连接池-->
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>druid-spring-boot-starter</artifactId>
+                <version>${druidVersion}</version>
+            </dependency>
+            <!--fastjson-->
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>fastjson</artifactId>
+                <version>${fastjsonVersion}</version>
+            </dependency>
+
+            <!--JDT的AST-->
+            <dependency>
+                <groupId>org.eclipse.jdt</groupId>
+                <artifactId>org.eclipse.jdt.core</artifactId>
+                <version>${JDTVersion}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpclient</artifactId>
+                <version>${httpClientVersion}</version>
+            </dependency>
+
+        </dependencies>
+    </dependencyManagement>
+
+
+</project>

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.edu.fudan.issueservice.mapper.RawIssueMapper">
+
+    <resultMap id="rawIssue" type="RawIssue">
+        <id property="uuid" column="uuid"/>
+        <result property="type" column="type"/>
+        <result property="category" column="category"/>
+        <result property="detail" column="detail"/>
+        <result property="file_name" column="file_name"/>
+        <result property="scan_id" column="scan_id"/>
+        <result property="issue_id" column="issue_id"/>
+        <result property="commit_id" column="commit_id"/>
+        <result property="commit_time" column="commit_time"/>
+        <result property="developer_email" column="developer_email"/>
+        <collection property="locations" column="uuid"
+                    select="cn.edu.fudan.issueservice.mapper.LocationMapper.getLocations"/>
+    </resultMap>
+
+    <resultMap id="rawIssue2" type="RawIssue">
+        <id property="uuid" column="uuid"/>
+        <result property="type" column="type"/>
+        <result property="category" column="category"/>
+        <result property="detail" column="detail"/>
+        <result property="file_name" column="file_name"/>
+        <result property="scan_id" column="scan_id"/>
+        <result property="issue_id" column="issue_id"/>
+        <result property="commit_id" column="commit_id"/>
+        <collection property="locations" column="uuid"
+                    select="cn.edu.fudan.issueservice.mapper.LocationMapper.getLocations"/>
+    </resultMap>
+
+
+    <insert id="insertRawIssueList" parameterType="List">
+        insert into rawIssue
+        (
+        uuid,
+        type,
+        category,
+        detail,
+        file_name,
+        scan_id,
+        issue_id,
+        commit_id
+        )
+        VALUES
+        <foreach collection="list" item="item" index="index"
+                 separator=",">
+            (
+            #{item.uuid},
+            #{item.type},
+            #{item.category},
+            #{item.detail},
+            #{item.file_name},
+            #{item.scan_id},
+            #{item.issue_id},
+            #{item.commit_id}
+            )
+        </foreach>
+    </insert>
+
+    <delete id="deleteRawIssueByRepoIdAndCategory" parameterType="String">
+        delete from rawIssue where scan_id in (select uuid from scan where repo_id = #{repo_id} and category = #{category})
+    </delete>
+
+    <update id="batchUpdateIssueId" parameterType="java.util.List">
+        update rawIssue
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="issue_id =case" suffix="end,">
+                <foreach collection="list" item="item">
+                    <if test="item.issue_id != null">
+                        when uuid=#{item.uuid} then #{item.issue_id}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        <where>
+            <foreach collection="list" separator="or" item="item">
+                uuid = #{item.uuid}
+            </foreach>
+        </where>
+    </update>
+
+
+    <select id="getIssueCountBeforeSpecificTime" parameterType="String" resultType="Integer">
+        select
+        count(distinct(issue_id))
+        from
+        rawIssue
+        where
+        scan_id in (select uuid from scan where end_time &lt; #{specificTime} and project_id in (select uuid from
+        project where account_id = #{account_id}));
+    </select>
+
+
+    <select id="getRawIssueByCommitIDAndCategory" parameterType="String" resultMap="rawIssue2">
+        select * from rawIssue where commit_id = #{commit_id} and category = #{category}
+    </select>
+
+    <select id="getRawIssueByIssueId" parameterType="String" resultMap="rawIssue">
+        select distinct a.* ,b.commit_time as commit_time , b.developer_email as developer_email
+        from rawIssue as a
+        inner join commit as b
+        on a.commit_id = b.commit_id
+        where a.issue_id=#{issueId}
+        order by commit_time;
+    </select>
+
+   <select id="getTypesByCommit" resultType="string">
+       select distinct type as types
+       from rawIssue
+       where category = #{category} and commit_id = #{commit_id}
+       order by types
+   </select>
+</mapper>

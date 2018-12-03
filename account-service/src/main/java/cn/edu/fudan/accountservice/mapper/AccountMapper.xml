@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.edu.fudan.accountservice.mapper.AccountMapper">
+
+    <resultMap id="account" type="Account">
+        <id property="uuid" column="uuid"/>
+        <result property="accountName" column="accountName"/>
+        <result property="password" column="password"/>
+        <result property="name" column="name"/>
+        <result property="email" column="email"/>
+    </resultMap>
+
+    <insert id="addAccount" parameterType="Account">
+        insert into account
+        (
+        uuid,
+        accountName,
+        password,
+        name,
+        email
+        )
+        values
+        (
+        #{uuid},
+        #{accountName},
+        #{password},
+        #{name},
+        #{email}
+        )
+    </insert>
+
+    <select id="getAccountIdByName" parameterType="String" resultType="String">
+        select uuid from account where name = #{name}
+    </select>
+
+    <select id="getAccountByAccountName" parameterType="String" resultMap="account">
+        select * from account where accountName = #{accountName}
+    </select>
+
+    <select id="login" resultMap="account">
+        select *
+        from
+        account
+        where
+        accountName=#{accountName} and password=#{password}
+    </select>
+
+    <select id="getAccountByEmail" parameterType="String" resultMap="account">
+        select * from account where email = #{email}
+    </select>
+
+    <select id="getAllAccountId" resultType="String">
+        select uuid from account;
+    </select>
+</mapper>

@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.edu.fudan.issueservice.mapper.IssueMapper">
+
+    <resultMap id="issue" type="Issue">
+        <id property="uuid" column="uuid"/>
+        <result property="type" column="type"/>
+        <result property="category" column="category"/>
+        <result property="start_commit" column="start_commit"/>
+        <result property="start_commit_date" column="start_commit_date"/>
+        <result property="end_commit" column="end_commit"/>
+        <result property="end_commit_date" column="end_commit_date"/>
+        <result property="raw_issue_start" column="raw_issue_start"/>
+        <result property="raw_issue_end" column="raw_issue_end"/>
+        <result property="repo_id" column="repo_id"/>
+        <result property="target_files" column="target_files"/>
+        <result property="create_time" column="create_time"/>
+        <result property="update_time" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="issue2" type="Issue">
+        <id property="uuid" column="uuid"/>
+        <result property="type" column="type"/>
+        <result property="category" column="category"/>
+        <result property="start_commit" column="start_commit"/>
+        <result property="start_commit_date" column="start_commit_date"/>
+        <result property="end_commit" column="end_commit"/>
+        <result property="end_commit_date" column="end_commit_date"/>
+        <result property="raw_issue_start" column="raw_issue_start"/>
+        <result property="raw_issue_end" column="raw_issue_end"/>
+        <result property="repo_id" column="repo_id"/>
+        <result property="target_files" column="target_files"/>
+        <result property="create_time" column="create_time"/>
+        <result property="update_time" column="update_time"/>
+        <collection property="issueType" column="type"
+                    select="cn.edu.fudan.issueservice.mapper.IssueTypeMapper.getIssueTypeByTypeName"/>
+    </resultMap>
+
+
+    <insert id="insertIssueList" parameterType="List">
+        insert into issue
+        (
+        uuid,
+        type,
+        category,
+        start_commit,
+        start_commit_date,
+        end_commit,
+        end_commit_date,
+        raw_issue_start,
+        raw_issue_end,
+        repo_id,
+        target_files,
+        create_time,
+        update_time
+        )
+        VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            #{item.uuid},
+            #{item.type},
+            #{item.category},
+            #{item.start_commit},
+            #{item.start_commit_date},
+            #{item.end_commit},
+            #{item.end_commit_date},
+            #{item.raw_issue_start},
+            #{item.raw_issue_end},
+            #{item.repo_id},
+            #{item.target_files},
+            #{item.create_time},
+            #{item.update_time}
+            )
+        </foreach>
+    </insert>
+
+    <select id="getIssueList" parameterType="Map" resultMap="issue2">
+        select * from issue
+        <where>
+            <if test="repo_id != null">
+                repo_id = #{repo_id}
+            </if>
+            <if test="types != null">
+                and type in
+                <foreach collection="types" separator="," open="(" close=")" item="type">
+                    #{type}
+                </foreach>
+            </if>
+            <if test="issue_ids != null">
+                and uuid in
+                <foreach collection="issue_ids" separator="," open="(" close=")" item="issue_id">
+                    #{issue_id}
+                </foreach>
+            </if>
+            <if test="solved_issue_ids != null">
+                and uuid not in
+                <foreach collection="solved_issue_ids" separator="," open="(" close=")" item="issue_id">
+                    #{issue_id}
+                </foreach>
+            </if>
+            <if test="category != null">
+                and category = #{category}
+            </if>
+        </where>
+        order by end_commit_date desc , start_commit_date desc
+        <if test="start != null  and size != null ">
+            limit #{start},#{size}
+        </if>
+    </select>
+
+    <select id="getIssueByID" parameterType="String" resultMap="issue">
+        select * from issue where uuid = #{uuid}
+    </select>
+
+    <select id="getIssueCount" parameterType="Map" resultType="Integer">
+        select count(uuid) from issue
+        <where>
+            <if test="repo_id != null">
+                repo_id = #{repo_id}
+            </if>
+            <if test="types != null">
+                and type in
+                <foreach collection="types" separator="," open="(" close=")" item="type">
+                    #{type}
+                </foreach>
+            </if>
+            <if test="issue_ids != null">
+                and uuid in
+                <foreach collection="issue_ids" separator="," open="(" close=")" item="issue_id">
+                    #{issue_id}
+                </foreach>
+            </if>
+            <if test="solved_issue_ids != null">
+                and uuid not in
+                <foreach collection="solved_issue_ids" separator="," open="(" close=")" item="issue_id">
+                    #{issue_id}
+                </foreach>
+            </if>
+            <if test="category != null">
+                and category = #{category}
+            </if>
+        </where>
+    </select>
+
+    <select id="getSolvedIssues" parameterType="String" resultMap="issue">
+        select * from issue
+        where repo_id = #{repo_id} and end_commit = #{commit_id}
+    </select>
+
+    <update id="batchUpdateIssue" parameterType="List">
+        update issue
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="start_commit = case" suffix="end,">
+                <foreach collection="list" item="item">
+                    <if test="item.start_commit != null">
+                        when uuid=#{item.uuid} then #{item.start_commit}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="end_commit = case" suffix="end,">
+                <foreach collection="list" item="item">
+                    <if test="item.end_commit != null">
+                        when uuid=#{item.uuid} then #{item.end_commit}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="end_commit_date = case" suffix="end,">
+                <foreach collection="list" item="item">
+                    <if test="item.end_commit_date != null">
+                        when uuid=#{item.uuid} then #{item.end_commit_date}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="raw_issue_start = case" suffix="end,">
+                <foreach collection="list" item="item">
+                    <if test="item.raw_issue_start != null">
+                        when uuid=#{item.uuid} then #{item.raw_issue_start}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="raw_issue_end = case" suffix="end,">
+                <foreach collection="list" item="item">
+                    <if test="item.raw_issue_end != null">
+                        when uuid=#{item.uuid} then #{item.raw_issue_end}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="target_files = case" suffix="end,">
+                <foreach collection="list" item="item">
+                    <if test="item.target_files != null">
+                        when uuid=#{item.uuid} then #{item.target_files}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="update_time = case" suffix="end,">
+                <foreach collection="list" item="item">
+                    <if test="item.update_time != null">
+                        when uuid=#{item.uuid} then #{item.update_time}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        <where>
+            <foreach collection="list" separator="or" item="item">
+                uuid = #{item.uuid}
+            </foreach>
+        </where>
+    </update>
+
+    <delete id="deleteIssueByRepoIdAndCategory" parameterType="String">
+        delete from issue where repo_id = #{repo_id} and category = #{category}
+    </delete>
+
+    <select id="getExistIssueTypes" resultType="String">
+        select distinct type  as types
+        from issue
+        where category = #{category} order by types
+    </select>
+
+    <select id="getIssueIdsByRepoIdAndCategory" resultType="String" parameterType="String">
+        select uuid from issue where repo_id = #{repo_id} and category = #{category}
+    </select>
+
+    <select id="getSpecificIssueCount" resultType="int" parameterType="Map">
+        select count(uuid) from issue where category = #{category} and uuid in
+        <foreach collection="list" separator="," open="(" close=")" item="issue_id">
+            #{issue_id}
+        </foreach>
+    </select>
+
+    <select id="getSpecificIssues" resultMap="issue2" parameterType="Map">
+        select * from issue where category = #{category} and uuid in
+        <foreach collection="list" separator="," open="(" close=")" item="issue_id">
+            #{issue_id}
+        </foreach>
+        limit #{start},#{size}
+    </select>
+
+    <select id="getAvgEliminatedTime" resultType="double">
+        select
+           avg((UNIX_TIMESTAMP(end_commit_date) - UNIX_TIMESTAMP(start_commit_date)))
+        FROM
+            issue
+        WHERE
+             repo_id = #{repo_id} and category = #{category} and uuid in
+        <foreach collection="list" separator="," open="(" close=")" item="issue_id">
+            #{issue_id}
+        </foreach>
+    </select>
+
+    <select id="getMaxAliveTime" resultType="long">
+        select
+            max((UNIX_TIMESTAMP(end_commit_date) - UNIX_TIMESTAMP(start_commit_date)))
+        FROM
+            issue
+        WHERE
+            repo_id = #{repo_id} and category = #{category}
+        <if test="list != null">
+            and uuid not in
+            <foreach collection="list" separator="," open="(" close=")" item="issue_id">
+                #{issue_id}
+            </foreach>
+        </if>
+    </select>
+
+</mapper>

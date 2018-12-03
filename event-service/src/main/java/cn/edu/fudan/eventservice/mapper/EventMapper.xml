@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.edu.fudan.eventservice.mapper.EventMapper">
+
+    <resultMap id="event" type="Event">
+        <id property="id" column="id"/>
+        <result property="category" column="category" />
+        <result property="eventType" column="event_type"/>
+        <result property="targetType" column="target_type"/>
+        <result property="targetId" column="target_id"/>
+        <result property="targetCommitter" column="target_committer"/>
+        <result property="repoId" column="repo_id"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+
+    <insert id="insertEvents" parameterType="list">
+        insert into event
+              (
+                  id,
+                  category,
+                  event_type,
+                  target_type,
+                  target_id,
+                  target_committer,
+                  repo_id,
+                  create_time
+              )
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+                #{item.id},
+                #{item.category},
+                #{item.eventType},
+                #{item.targetType},
+                #{item.targetId},
+                #{item.targetCommitter},
+                #{item.repoId},
+                #{item.createTime}
+            )
+        </foreach>
+    </insert>
+
+    <delete id="deleteEventByRepoIdAndCategory" >
+        delete from event where repo_id = #{repo_id} and category = #{category}
+    </delete>
+    
+    <select id="getRecentEventsByEventType" parameterType="list" resultMap="event">
+        select * from event where repo_id in
+        <foreach collection="list" separator="," open="(" close=")" item="repo_id">
+            #{repo_id}
+        </foreach>
+        and event_type = #{event_type}
+        order by create_time desc
+        limit 10
+    </select>
+</mapper>
