@@ -66,6 +66,15 @@ public class IssueController {
         return issueService.getStatisticalResults(month, project_id, userToken,category);
     }
 
+    @GetMapping(value = {"/issue/statistical-results-fix"})
+    public Object getNewTrend(@RequestParam("month") Integer month,
+                              @RequestParam(name = "project_id") String project_id,
+                              @RequestParam(name="category",defaultValue = "bug")String category,
+                              HttpServletRequest request) {
+        String userToken = request.getHeader("token");
+        return issueService.getNewTrend(month, project_id, userToken,category);
+    }
+
     @PostMapping("/issue/specific-issues")
     public Object getSpecificIssues(@RequestBody IssueParam issueParam){
         return issueService.getSpecificIssues(issueParam);

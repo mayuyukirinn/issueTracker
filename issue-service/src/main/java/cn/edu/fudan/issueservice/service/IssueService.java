@@ -11,27 +11,29 @@ public interface IssueService {
 
     void insertIssueList(List<Issue> list);
 
-    void deleteIssueByRepoIdAndCategory(String repoId,String category);
+    void deleteIssueByRepoIdAndCategory(String repoId, String category);
 
     void batchUpdateIssue(List<Issue> list);
 
     Issue getIssueByID(String uuid);
 
-    Object getIssueList(String project_id, Integer page, Integer size,String category);
+    Object getIssueList(String project_id, Integer page, Integer size, String category);
 
     Object getFilteredIssueList(JSONObject requestParam);
 
     Object getSpecificIssues(IssueParam issueParam);
 
-    Object getDashBoardInfo(String duration, String project_id, String userToken,String category);
+    Object getDashBoardInfo(String duration, String project_id, String userToken, String category);
 
-    Object getStatisticalResults(Integer month, String project_id, String userToken,String category);
+    Object getStatisticalResults(Integer month, String project_id, String userToken, String category);
 
     Object getExistIssueTypes(String category);
 
-    Object getAliveAndEliminatedInfo(String project_id,String category);
+    Object getAliveAndEliminatedInfo(String project_id, String category);
 
-    void startMapping(String repo_id, String pre_commit_id, String current_commit_id,String category);
+    void startMapping(String repo_id, String pre_commit_id, String current_commit_id, String category);
 
     void updateIssueCount(String time);
+
+    Object getNewTrend(Integer month, String project_id, String userToken, String category);
 }

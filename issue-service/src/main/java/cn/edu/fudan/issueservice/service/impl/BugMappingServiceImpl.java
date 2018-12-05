@@ -1,10 +1,7 @@
 package cn.edu.fudan.issueservice.service.impl;
 
 import cn.edu.fudan.issueservice.component.TagMapHelper;
-import cn.edu.fudan.issueservice.domain.EventType;
-import cn.edu.fudan.issueservice.domain.Issue;
-import cn.edu.fudan.issueservice.domain.RawIssue;
-import cn.edu.fudan.issueservice.domain.RawIssueDetail;
+import cn.edu.fudan.issueservice.domain.*;
 import cn.edu.fudan.issueservice.util.LocationCompare;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +43,7 @@ public class BugMappingServiceImpl extends BaseMappingServiceImpl {
     public void mapping(String repo_id, String pre_commit_id, String current_commit_id, String category, String committer) {
         List<Issue> insertIssueList = new ArrayList<>();
         List<JSONObject> tags = new ArrayList<>();
+        Date date= new Date();
         if (pre_commit_id.equals(current_commit_id)) {
             //当前project第一次扫描，所有的rawIssue都是issue
             List<RawIssue> rawIssues = rawIssueDao.getRawIssueByCommitIDAndCategory(category,current_commit_id);
@@ -53,7 +51,6 @@ public class BugMappingServiceImpl extends BaseMappingServiceImpl {
                 return;
             log.info("first scan mapping!");
             Date commitDate=getCommitDate(current_commit_id);
-            Date date= new Date();
             for (RawIssue rawIssue : rawIssues) {
                 String new_IssueId = UUID.randomUUID().toString();
                 rawIssue.setIssue_id(new_IssueId);
@@ -69,6 +66,7 @@ public class BugMappingServiceImpl extends BaseMappingServiceImpl {
             dashboardUpdate(repo_id, newIssueCount, remainingIssueCount, eliminatedIssueCount,category);
             log.info("dashboard info updated!");
             rawIssueDao.batchUpdateIssueId(rawIssues);
+            scanResultDao.addOneScanResult(new ScanResult(category,repo_id,date,commitDate,newIssueCount,eliminatedIssueCount,remainingIssueCount));
         } else {
             //不是第一次扫描，需要和前一次的commit进行mapping
             List<RawIssue> rawIssues1 = rawIssueDao.getRawIssueByCommitIDAndCategory(category,pre_commit_id);
@@ -106,7 +104,6 @@ public class BugMappingServiceImpl extends BaseMappingServiceImpl {
                     String new_IssueId = UUID.randomUUID().toString();
                     issue_2.setIssue_id(new_IssueId);
                     String targetFiles = issue_2.getFile_name();
-                    Date date= new Date();
                     insertIssueList.add(new Issue(new_IssueId, issue_2.getType(),category, current_commit_id, commitDate,current_commit_id,commitDate, issue_2.getUuid(), issue_2.getUuid(), repo_id, targetFiles,date,date));
                     addTag(tags,issue_2,new_IssueId);
                 }
@@ -124,6 +121,7 @@ public class BugMappingServiceImpl extends BaseMappingServiceImpl {
             log.info("dashboard info updated!");
             rawIssueDao.batchUpdateIssueId(rawIssues2);
             modifyToSolvedTag(repo_id, pre_commit_id,EventType.ELIMINATE_BUG,committer);
+            scanResultDao.addOneScanResult(new ScanResult(category,repo_id,date,commitDate,newIssueCount,eliminatedIssueCount,remainingIssueCount));
         }
         //新的issue
         if (!insertIssueList.isEmpty()) {

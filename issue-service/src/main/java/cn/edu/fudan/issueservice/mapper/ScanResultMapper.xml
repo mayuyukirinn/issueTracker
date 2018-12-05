@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.edu.fudan.issueservice.mapper.ScanResultMapper">
+
+    <resultMap id="scanResult" type="ScanResult">
+        <id property="id" column="id"/>
+        <result property="category" column="category"/>
+        <result property="repo_id" column="repo_id"/>
+        <result property="commit_date" column="commit_date"/>
+        <result property="new_count" column="new_count"/>
+        <result property="eliminated_count" column="eliminated_count"/>
+        <result property="remaining_count" column="remaining_count"/>
+    </resultMap>
+
+    <resultMap id="issueCount" type="IssueCountPo">
+        <result property="date" column="commit_date"/>
+        <result property="newIssueCount" column="new_count"/>
+        <result property="eliminatedIssueCount" column="eliminated_count"/>
+        <result property="remainingIssueCount" column="remaining_count"/>
+    </resultMap>
+
+
+    <insert id="addOneScanResult" parameterType="ScanResult">
+        insert into scan_result
+           (
+              category,
+              repo_id,
+              scan_date,
+              commit_date,
+              new_count,
+              eliminated_count,
+              remaining_count
+           )
+        values
+           (
+              #{category},
+              #{repo_id},
+              #{scan_date},
+              #{commit_date},
+              #{new_count},
+              #{eliminated_count},
+              #{remaining_count}
+           )
+    </insert>
+
+    <select id="getScanResultsGroupByDay" resultMap="issueCount">
+        SELECT
+          `commit_date`,
+          sum(new_count) as new_count,
+          sum(remaining_count) as remaining_count,
+          SUBSTRING_INDEX(
+            GROUP_CONCAT(
+              `eliminated_count`
+              ORDER BY `id` DESC
+              SEPARATOR '||'
+            ),
+            '||',
+            1
+          ) eliminated_count
+        FROM
+          scan_result
+        <where>
+            <if test="list != null">
+                repo_id in
+                <foreach collection="list" separator="," open="(" close=")" item="repo_id">
+                    #{repo_id}
+                </foreach>
+            </if>
+            <if test="category != null">
+                and category = #{category}
+            </if>
+            <if test="end != null">
+                and commit_date &lt;= #{end}
+            </if>
+            <if test="start != null">
+                and commit_date &gt;= #{start}
+            </if>
+        </where>
+        GROUP BY `commit_date`
+    </select>
+
+    <select id="getMergedScanResult" resultMap="issueCount">
+        SELECT
+        `commit_date`,
+        sum(new_count) as new_count,
+        sum(remaining_count) as remaining_count,
+        SUBSTRING_INDEX(
+        GROUP_CONCAT(
+        `eliminated_count`
+        ORDER BY `id` DESC
+        SEPARATOR '||'
+        ),
+        '||',
+        1
+        ) eliminated_count
+        FROM
+        scan_result
+        <where>
+            <if test="list != null">
+                repo_id in
+                <foreach collection="list" separator="," open="(" close=")" item="repo_id">
+                    #{repo_id}
+                </foreach>
+            </if>
+            <if test="category != null">
+                and category = #{category}
+            </if>
+            <if test="end != null">
+                and commit_date &lt;= #{end}
+            </if>
+            <if test="start != null">
+                and commit_date &gt;= #{start}
+            </if>
+        </where>
+    </select>
+
+
+</mapper>

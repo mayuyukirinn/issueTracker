@@ -2,12 +2,11 @@ package cn.edu.fudan.issueservice.service.impl;
 
 import cn.edu.fudan.issueservice.component.RestInterfaceManager;
 import cn.edu.fudan.issueservice.dao.IssueDao;
-import cn.edu.fudan.issueservice.domain.Issue;
-import cn.edu.fudan.issueservice.domain.IssueCount;
-import cn.edu.fudan.issueservice.domain.IssueParam;
-import cn.edu.fudan.issueservice.domain.IssueStatisticInfo;
+import cn.edu.fudan.issueservice.dao.ScanResultDao;
+import cn.edu.fudan.issueservice.domain.*;
 import cn.edu.fudan.issueservice.scheduler.QuartzScheduler;
 import cn.edu.fudan.issueservice.service.IssueService;
+import cn.edu.fudan.issueservice.util.DateTimeUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +15,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.*;
 /**
  * @author WZY
@@ -70,6 +70,13 @@ public class IssueServiceImpl implements IssueService {
     @Autowired
     public void setIssueDao(IssueDao issueDao) {
         this.issueDao = issueDao;
+    }
+
+    private ScanResultDao scanResultDao;
+
+    @Autowired
+    public void setScanResultDao(ScanResultDao scanResultDao) {
+        this.scanResultDao = scanResultDao;
     }
 
 
@@ -330,5 +337,56 @@ public class IssueServiceImpl implements IssueService {
     @Override
     public void updateIssueCount(String time) {
         quartzScheduler.updateIssueCount(time);
+    }
+
+    @Override
+    public Object getNewTrend(Integer month, String project_id, String userToken, String category) {
+        List<IssueCountPo> result=new ArrayList<>();
+        String account_id = restInterfaceManager.getAccountId(userToken);
+        LocalDate end=LocalDate.now();
+        if(project_id==null||project_id.equals("")){
+            //需要查询该用户所有项目的扫描情况
+            JSONArray repoIds=restInterfaceManager.getRepoIdsOfAccount(account_id,category);
+            if(repoIds!=null){
+                if(month==1){
+                    //过去30天
+                    LocalDate start=end.minusMonths(1);
+                    return scanResultDao.getScanResultsGroupByDay(repoIds.toJavaList(String.class),category, DateTimeUtil.y_m_d_format(start),DateTimeUtil.y_m_d_format(end));
+                }else if(month==3||month==6){
+                    //过去3个月
+                    LocalDate start=end.minusMonths(month);
+                    while(start.isBefore(end)){
+                        LocalDate temp=start.plusWeeks(1);
+                        IssueCountPo issueCountPo=scanResultDao.getMergedScanResult(repoIds.toJavaList(String.class),category, DateTimeUtil.y_m_d_format(start),DateTimeUtil.y_m_d_format(temp));
+                        if(issueCountPo!=null)
+                            result.add(issueCountPo);
+                        start=temp;
+                    }
+                }else{
+                    throw new IllegalArgumentException("month should be 1 or 3 or 6");
+                }
+            }
+        }else{
+            //只需要查询该项目的扫描情况
+            String repoId=restInterfaceManager.getRepoIdOfProject(project_id);
+            if(month==1){
+                //过去30天
+                LocalDate start=end.minusMonths(1);
+                return scanResultDao.getScanResultsGroupByDay(Collections.singletonList(repoId),category, DateTimeUtil.y_m_d_format(start),DateTimeUtil.y_m_d_format(end));
+            }else if(month==3||month==6){
+                //过去3个月
+                LocalDate start=end.minusMonths(month);
+                while(start.isBefore(end)){
+                    LocalDate temp=start.plusWeeks(1);
+                    IssueCountPo issueCountPo=scanResultDao.getMergedScanResult(Collections.singletonList(repoId),category, DateTimeUtil.y_m_d_format(start),DateTimeUtil.y_m_d_format(temp));
+                    if(issueCountPo!=null)
+                        result.add(issueCountPo);
+                    start=temp;
+                }
+            }else{
+                throw new IllegalArgumentException("month should be 1 or 3 or 6");
+            }
+        }
+        return result;
     }
 }
