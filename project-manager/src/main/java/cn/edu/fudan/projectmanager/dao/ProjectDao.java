@@ -63,6 +63,10 @@ public class ProjectDao {
         return projectMapper.getProjectIdsByRepoIdAndType(repoId,type).size() >= 2;
     }
 
+    public boolean existProjectWithThisRepoIdAndType(String repoId,String type){
+        return !projectMapper.getProjectIdsByRepoIdAndType(repoId,type).isEmpty();
+    }
+
     public List<Project> getProjectsByURLAndType(String url,String type){
         return projectMapper.getProjectsByURLAndType(url, type);
     }

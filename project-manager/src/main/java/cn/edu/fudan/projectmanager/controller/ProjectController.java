@@ -99,5 +99,9 @@ public class ProjectController {
         return projectService.getProjectByAccountId(account_id);
     }
 
+    @GetMapping(value = "/inner/project/exist")
+    public Object exist(@RequestParam("repo_id") String repo_id,@RequestParam("type")String type){
+        return projectService.existProjectWithThisRepoIdAndType(repo_id, type);
+    }
 
 }

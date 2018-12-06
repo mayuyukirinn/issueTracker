@@ -27,4 +27,6 @@ public interface ProjectService {
     void remove(String projectId,String type, String userToken);
 
     String getRepoId(String projectId);
+
+    Object existProjectWithThisRepoIdAndType(String repoId,String type);
 }
