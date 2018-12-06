@@ -1,4 +1,4 @@
-package cn.edu.fudan.scanservice.service.impl;
+package cn.edu.fudan.scanservice.tools;
 
 import cn.edu.fudan.scanservice.component.RestInterfaceManager;
 import cn.edu.fudan.scanservice.dao.ScanDao;
@@ -11,12 +11,7 @@ import com.alibaba.fastjson.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.Date;
 import java.util.UUID;
@@ -27,7 +22,7 @@ public class ScanOperationAdapter implements ScanOperation {
 
     private final static Logger logger = LoggerFactory.getLogger(ScanOperationAdapter.class);
 
-    protected RestInterfaceManager restInterfaceManager;
+    RestInterfaceManager restInterfaceManager;
 
     @Autowired
     public void setRestInterfaceManager(RestInterfaceManager restInterfaceManager) {

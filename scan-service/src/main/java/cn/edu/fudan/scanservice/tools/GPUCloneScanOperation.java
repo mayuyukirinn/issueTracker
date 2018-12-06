@@ -2,7 +2,6 @@ package cn.edu.fudan.scanservice.tools;
 
 import cn.edu.fudan.scanservice.domain.ScanInitialInfo;
 import cn.edu.fudan.scanservice.domain.ScanResult;
-import cn.edu.fudan.scanservice.service.impl.ScanOperationAdapter;
 import com.alibaba.fastjson.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,9 +14,9 @@ import org.springframework.stereotype.Component;
  * @version 1.0
  **/
 @Component("GPUClone")
-public class CloneScanOperation extends ScanOperationAdapter {
+public class GPUCloneScanOperation extends ScanOperationAdapter {
 
-    private Logger logger = LoggerFactory.getLogger(CloneScanOperation.class);
+    private Logger logger = LoggerFactory.getLogger(GPUCloneScanOperation.class);
 
     private KafkaTemplate kafkaTemplate;
 

@@ -3,7 +3,7 @@ package cn.edu.fudan.scanservice.service;
 import cn.edu.fudan.scanservice.dao.ScanDao;
 import cn.edu.fudan.scanservice.domain.Scan;
 import cn.edu.fudan.scanservice.domain.ScanInitialInfo;
-import cn.edu.fudan.scanservice.service.impl.ScanOperationAdapter;
+import cn.edu.fudan.scanservice.tools.ScanOperationAdapter;
 import cn.edu.fudan.scanservice.util.TestDataMaker;
 import com.alibaba.fastjson.JSONObject;
 import org.junit.Assert;
@@ -19,11 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
-
-import static org.junit.Assert.*;
 
 @PrepareForTest({ScanOperation.class, ScanOperationAdapter.class, RestTemplate.class, ScanDao.class})
 public class ScanOperationTest {

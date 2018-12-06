@@ -3,6 +3,7 @@ package cn.edu.fudan.scanservice.service.impl;
 
 import cn.edu.fudan.scanservice.component.RestInterfaceManager;
 import cn.edu.fudan.scanservice.domain.ScanMessage;
+import cn.edu.fudan.scanservice.domain.ScanMessageWithTime;
 import cn.edu.fudan.scanservice.domain.ScanResult;
 import cn.edu.fudan.scanservice.service.KafkaService;
 import cn.edu.fudan.scanservice.task.CloneScanTask;
@@ -18,6 +19,8 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -115,7 +118,8 @@ public class KafkaServiceImpl implements KafkaService {
         initialProject(projectId);
         String repoId = restInterfaceManager.getRepoIdOfProject(projectId);
         if(category.equals("clone")){
-            cloneScanTask.run(repoId,commitId,category);
+            Future<String> future =cloneScanTask.run(repoId,commitId,category);
+            setTimeOut(future, repoId);
         }else{
             Future<String> future = findBugScanTask.run(repoId, commitId,category);
             //开一个工作者线程来管理异步任务的超时
@@ -136,12 +140,58 @@ public class KafkaServiceImpl implements KafkaService {
         ScanMessage scanMessage = JSONObject.parseObject(msg, ScanMessage.class);
         String repoId = scanMessage.getRepoId();
         String commitId = scanMessage.getCommitId();
-        String category=scanMessage.getCategory();
-        Future<String> future = findBugScanTask.run(repoId, commitId,category);
-        setTimeOut(future, repoId);
-       //cloneScanTask.run(repoId,commitId,"clone");
+        //串行扫
+        if(existProject(repoId,"bug"))
+            findBugScanTask.runSynchronously(repoId, commitId,"bug");
+        if(existProject(repoId,"clone"))
+            cloneScanTask.runSynchronously(repoId,commitId,"clone");
     }
 
+    @KafkaListener(id = "updateCommit", topics = {"UpdateCommit"}, groupId = "updateCommit")
+    public void firstScanByMQ(ConsumerRecord<String, String> consumerRecord){
+        String msg = consumerRecord.value();
+        List<ScanMessageWithTime> commits=JSONArray.parseArray(msg,ScanMessageWithTime.class);
+        int size=commits.size();
+        logger.info("received message from topic -> " + consumerRecord.topic() + " : " + size+" commits need to scan!");
+        if(!commits.isEmpty()){
+            List<ScanMessageWithTime> filteredCommits=getFilteredList(commits);
+            String repoId=filteredCommits.get(0).getRepoId();
+            if(existProject(repoId,"bug")){
+                for(ScanMessageWithTime message:filteredCommits){
+                    String commitId = message.getCommitId();
+                    findBugScanTask.runSynchronously(repoId,commitId,"bug");
+                }
+            }
+            if(existProject(repoId,"clone")){
+                for(ScanMessageWithTime message:filteredCommits){
+                    String commitId = message.getCommitId();
+                    cloneScanTask.runSynchronously(repoId,commitId,"clone");
+                }
+            }
+        }
+    }
+
+    private boolean existProject(String repoId,String category){
+        JSONObject response=restInterfaceManager.existThisProject(repoId, category);
+        return response!=null&&response.getBooleanValue("exist");
+    }
+
+    private List<ScanMessageWithTime> getFilteredList(List<ScanMessageWithTime> sourceList){
+        int sourceSize=sourceList.size();
+        if(sourceSize<=10)
+            return sourceList;
+
+        LinkedList<ScanMessageWithTime> result=new LinkedList<>();
+        int i=0,step=1;
+        while(i<sourceSize){
+            if(i>10){
+                step+=10;
+            }
+            result.addFirst(sourceList.get(sourceSize-1-i));
+            i+=step;
+        }
+        return result;
+    }
 
     /**
      * 根据扫描的结果更新project的状态

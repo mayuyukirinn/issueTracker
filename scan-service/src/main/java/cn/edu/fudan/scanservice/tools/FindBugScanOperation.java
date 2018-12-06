@@ -3,7 +3,6 @@ package cn.edu.fudan.scanservice.tools;
 import cn.edu.fudan.scanservice.domain.Scan;
 import cn.edu.fudan.scanservice.domain.ScanInitialInfo;
 import cn.edu.fudan.scanservice.domain.ScanResult;
-import cn.edu.fudan.scanservice.service.impl.ScanOperationAdapter;
 import cn.edu.fudan.scanservice.util.ASTUtil;
 import cn.edu.fudan.scanservice.util.ExcuteShellUtil;
 import com.alibaba.fastjson.JSONObject;

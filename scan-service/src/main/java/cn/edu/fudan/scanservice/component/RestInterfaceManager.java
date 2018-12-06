@@ -86,5 +86,8 @@ public class RestInterfaceManager {
             throw new RuntimeException("project update failed!");
         }
     }
+    public JSONObject existThisProject(String repoId,String category){
+        return restTemplate.getForObject(projectServicePath+"/inner/project/exist?repoId="+repoId+"&type="+category,JSONObject.class);
+    }
 
 }

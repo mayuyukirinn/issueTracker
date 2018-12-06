@@ -1,6 +1,6 @@
 package cn.edu.fudan.scanservice;
 
-import cn.edu.fudan.scanservice.service.impl.ScanOperationAdapter;
+import cn.edu.fudan.scanservice.tools.ScanOperationAdapter;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
